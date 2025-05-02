@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useCallback, useEffect, useState } from "react";
+import { loadFull } from "tsparticles";
+import Particles from "react-tsparticles";
+import axios from "axios";
 
 function App() {
   const [formData, setFormData] = useState({
@@ -9,6 +11,10 @@ function App() {
     department_id: "",
     role_id: ""
   });
+
+  const particlesInit = useCallback(async (engine) => {
+    await loadFull(engine);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,72 +31,43 @@ function App() {
     style.innerHTML = `
       body {
         margin: 0;
-        padding: 0;
-        height: 100vh;
-        overflow: hidden;
-        background: linear-gradient(to top, #0f2027, #203a43, #2c5364);
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        color: #fff;
+        background: #000;
+        overflow: hidden;
       }
 
       .app-wrapper {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        position: relative;
-        z-index: 2;
-      }
-
-      /* Better shooting stars with blur and light trail */
-      .shooting-star {
-        position: absolute;
-        width: 150px;
-        height: 2px;
-        background: linear-gradient(90deg, white, transparent);
-        opacity: 0.8;
-        filter: blur(1px);
-        transform: rotate(-45deg);
-        animation: shoot 3s linear infinite;
-      }
-
-      .shooting-star:nth-child(1) { top: 10%; left: -200px; animation-delay: 0s; }
-      .shooting-star:nth-child(2) { top: 20%; left: -250px; animation-delay: 1.5s; }
-      .shooting-star:nth-child(3) { top: 40%; left: -180px; animation-delay: 3s; }
-      .shooting-star:nth-child(4) { top: 60%; left: -300px; animation-delay: 4.5s; }
-      .shooting-star:nth-child(5) { top: 75%; left: -220px; animation-delay: 6s; }
-
-      @keyframes shoot {
-        0% {
-          transform: translateX(0) translateY(0) rotate(-45deg);
-          opacity: 0;
-        }
-        10% {
-          opacity: 1;
-        }
-        100% {
-          transform: translateX(600px) translateY(600px) rotate(-45deg);
-          opacity: 0;
-        }
+        z-index: 1;
+        padding: 20px;
       }
 
       .form-container {
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
         padding: 32px;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        color: white;
         max-width: 420px;
-        width: 90%;
-        position: relative;
-        z-index: 3;
-        color: #333;
+        width: 100%;
+        animation: fadeInUp 1.5s ease;
+      }
+
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
       .form-title {
         text-align: center;
-        margin-bottom: 24px;
-        font-size: 1.5rem;
+        font-size: 1.7rem;
         font-weight: bold;
+        margin-bottom: 24px;
       }
 
       .form {
@@ -101,30 +78,33 @@ function App() {
 
       .form input {
         padding: 12px 16px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
+        border: none;
+        border-radius: 10px;
         font-size: 1rem;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        outline: none;
       }
 
-      .form input:focus {
-        border-color: #007bff;
-        outline: none;
+      .form input::placeholder {
+        color: #cccccc;
       }
 
       .form button {
         padding: 14px;
-        background: linear-gradient(to right, #007bff, #0056d2);
+        background: linear-gradient(to right, #00c6ff, #0072ff);
         color: white;
-        font-weight: 600;
+        font-weight: bold;
         font-size: 1rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
-        transition: 0.3s;
+        transition: 0.3s ease;
       }
 
       .form button:hover {
-        background: linear-gradient(to right, #0056d2, #003c9e);
+        background: linear-gradient(to right, #0072ff, #00c6ff);
+        transform: scale(1.03);
       }
     `;
     document.head.appendChild(style);
@@ -132,17 +112,94 @@ function App() {
 
   return (
     <>
-      {/* Shooting Stars */}
-      <div className="shooting-star"></div>
-      <div className="shooting-star"></div>
-      <div className="shooting-star"></div>
-      <div className="shooting-star"></div>
-      <div className="shooting-star"></div>
+      {/* Shooting Star Particle Background */}
+      <Particles
+        init={particlesInit}
+        options={{
+          background: {
+            color: { value: "#000000" },
+            image: "none",
+          },
+          fpsLimit: 60,
+          particles: {
+            number: {
+              value: 50, // Reduced particle count for more dramatic shooting stars
+              density: {
+                enable: true,
+                area: 800,
+              },
+            },
+            color: {
+              value: "#ffffff", // White color for stars
+            },
+            shape: {
+              type: "star", // Set shape to star for shooting stars
+            },
+            opacity: {
+              value: 0.8, // More opacity to make the stars visible
+              random: true,
+            },
+            size: {
+              value: 4, // Larger size for shooting stars
+              random: true,
+              animation: {
+                enable: false,
+              },
+            },
+            move: {
+              enable: true,
+              speed: 10, // Fast movement for shooting stars
+              direction: "random", // Random movement direction
+              random: true,
+              straight: true, // Move in a straight line
+              outModes: {
+                default: "out", // Particles disappear when out of screen
+              },
+            },
+            links: {
+              enable: false, // Disable links between particles
+            },
+            life: {
+              duration: 0.5, // Short life for the shooting stars
+              count: 1, // Only one shooting star per particle
+              delay: 0, // No delay
+            },
+          },
+          interactivity: {
+            events: {
+              onHover: {
+                enable: true,
+                mode: "grab",
+              },
+              onClick: {
+                enable: false,
+                mode: "push",
+              },
+              resize: true,
+            },
+            modes: {
+              grab: {
+                distance: 150,
+                links: {
+                  opacity: 0.6,
+                },
+              },
+            },
+          },
+          detectRetina: true,
+        }}
+        style={{
+          position: "absolute",
+          zIndex: 0,
+          height: "100vh",
+          width: "100vw",
+        }}
+      />
 
-      {/* Form UI */}
+      {/* Glass Form */}
       <div className="app-wrapper">
         <div className="form-container">
-          <div className="form-title">🌠 Employee Onboarding</div>
+          <div className="form-title">🌌 Employee Onboarding</div>
           <form onSubmit={handleSubmit} className="form">
             <input name="employee_id" placeholder="ID" onChange={handleChange} />
             <input name="name" placeholder="Name" onChange={handleChange} />
